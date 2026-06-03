@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    background: #0B2027;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid #D4A574;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .heading-display {
+    @apply font-light text-cream-100;
+    font-size: clamp(28px, 4.5vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  .cta-primary {
+    @apply bg-gold-500 text-ink-900 uppercase tracking-wide font-medium;
+    border-radius: 15px;
+    padding: 18px 28px;
+    font-size: 18px;
+    transition: transform 120ms ease, background-color 120ms ease, opacity 120ms ease;
+  }
+  .cta-primary:hover:not(:disabled) {
+    @apply bg-gold-400;
+  }
+  .cta-primary:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .cta-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .option-card {
+    @apply w-full text-left rounded-card border border-white/10 bg-white/[0.04] text-white p-5 transition-colors;
+  }
+  .option-card:hover {
+    @apply bg-white/[0.08] border-white/20;
+  }
+  .option-card[data-selected="true"] {
+    @apply bg-gold-500/15 border-gold-500;
+  }
+
+  .field {
+    @apply rounded-card border border-white/15 bg-white/[0.04] px-4 pt-3 pb-3;
+  }
+  .field label {
+    @apply block text-[12px] uppercase tracking-wider text-muted-soft mb-1;
+  }
+  .field input {
+    @apply w-full bg-transparent text-white placeholder:text-white/30 outline-none text-[18px];
+  }
+
+  .info-card {
+    @apply rounded-card bg-white/[0.06] border border-white/10 p-5;
+  }
+}
