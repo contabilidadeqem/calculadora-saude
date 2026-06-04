@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { formatMaskedBRL, parseDigits } from "@/lib/format";
+import { trackEvent } from "@/lib/pixel";
 
 export default function Step4Faturamento({
   value,
@@ -20,6 +21,18 @@ export default function Step4Faturamento({
   }, [digits, onChange]);
 
   const valid = parseDigits(digits) >= 1000;
+
+  const handleAdvance = () => {
+    const faturamento = parseDigits(digits);
+    // Sinal forte de intenção — usuário informou faturamento.
+    trackEvent("ViewContent", {
+      content_name: "Faturamento Informado",
+      content_category: "Calculadora",
+      currency: "BRL",
+      value: faturamento,
+    });
+    onNext();
+  };
 
   return (
     <div className="space-y-6">
@@ -43,13 +56,13 @@ export default function Step4Faturamento({
             setDigits(e.target.value.replace(/\D/g, "").slice(0, 12))
           }
           onKeyDown={(e) => {
-            if (e.key === "Enter" && valid) onNext();
+            if (e.key === "Enter" && valid) handleAdvance();
           }}
         />
       </div>
 
       <button
-        onClick={onNext}
+        onClick={handleAdvance}
         disabled={!valid}
         className="cta-primary w-full"
       >

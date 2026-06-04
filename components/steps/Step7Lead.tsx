@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { CalcResult } from "@/lib/calc";
 import { formatPhoneBR } from "@/lib/format";
 import type { LeadData } from "@/lib/whatsapp";
+import { trackEvent, newEventId } from "@/lib/pixel";
 
 interface Props {
   result: CalcResult;
@@ -42,7 +43,26 @@ export default function Step7Lead({
       regime: regimeLabel,
     };
 
-    // 1) Manda o lead pro HubSpot (silencioso, não bloqueia se falhar).
+    // EventId compartilhado entre Pixel (client) e CAPI (server) — Meta deduplica.
+    const eventId = newEventId();
+
+    // 1a) Meta Pixel — evento Lead client-side.
+    trackEvent(
+      "Lead",
+      {
+        content_name: "Calculadora Equiparação Hospitalar",
+        content_category: lead.area,
+        currency: "BRL",
+        value: Math.round(result.economiaAnual),
+        // Custom params úteis no Meta Ads:
+        regime: lead.regime,
+        faturamento_mensal: Math.round(result.faturamentoMensal),
+        economia_mensal: Math.round(result.economiaMensal),
+      },
+      eventId
+    );
+
+    // 1b) Servidor: HubSpot + Meta CAPI (silencioso, não bloqueia se falhar).
     try {
       await fetch("/api/lead", {
         method: "POST",
@@ -56,6 +76,21 @@ export default function Step7Lead({
           economiaAnual: result.economiaAnual,
           pageUri:
             typeof window !== "undefined" ? window.location.href : undefined,
+          eventId,
+          fbp:
+            typeof document !== "undefined"
+              ? document.cookie
+                  .split("; ")
+                  .find((c) => c.startsWith("_fbp="))
+                  ?.split("=")[1]
+              : undefined,
+          fbc:
+            typeof document !== "undefined"
+              ? document.cookie
+                  .split("; ")
+                  .find((c) => c.startsWith("_fbc="))
+                  ?.split("=")[1]
+              : undefined,
         }),
         keepalive: true,
       });
