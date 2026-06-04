@@ -2,15 +2,21 @@
 import { useState } from "react";
 import type { CalcResult } from "@/lib/calc";
 import { formatPhoneBR } from "@/lib/format";
-import { buildWhatsAppMessage, buildWhatsAppURL } from "@/lib/whatsapp";
+import type { LeadData } from "@/lib/whatsapp";
 
 interface Props {
   result: CalcResult;
   areaLabel: string;
   regimeLabel: string;
+  onSubmitted: (lead: LeadData) => void;
 }
 
-export default function Step7Lead({ result, areaLabel, regimeLabel }: Props) {
+export default function Step7Lead({
+  result,
+  areaLabel,
+  regimeLabel,
+  onSubmitted,
+}: Props) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -28,15 +34,21 @@ export default function Step7Lead({ result, areaLabel, regimeLabel }: Props) {
 
     setSubmitting(true);
 
+    const lead: LeadData = {
+      nome: nome.trim(),
+      email: email.trim(),
+      whatsapp: formatPhoneBR(phoneDigits),
+      area: areaLabel,
+      regime: regimeLabel,
+    };
+
     // 1) Manda o lead pro HubSpot (silencioso, não bloqueia se falhar).
     try {
       await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nome: nome.trim(),
-          email: email.trim(),
-          whatsapp: formatPhoneBR(phoneDigits),
+          ...lead,
           areaInternal: areaLabel,
           regimeInternal: regimeLabel,
           faturamentoMensal: result.faturamentoMensal,
@@ -48,22 +60,11 @@ export default function Step7Lead({ result, areaLabel, regimeLabel }: Props) {
         keepalive: true,
       });
     } catch (err) {
-      // Não bloqueia o WhatsApp se a chamada falhar.
       console.warn("Falha ao registrar lead no CRM:", err);
     }
 
-    // 2) Abre o WhatsApp com a mensagem pré-montada.
-    const msg = buildWhatsAppMessage(
-      {
-        nome: nome.trim(),
-        email: email.trim(),
-        whatsapp: formatPhoneBR(phoneDigits),
-        area: areaLabel,
-        regime: regimeLabel,
-      },
-      result
-    );
-    window.open(buildWhatsAppURL(msg), "_blank", "noopener,noreferrer");
+    // 2) Transiciona para a tela de resultado (Step8Result decide o que mostrar).
+    onSubmitted(lead);
 
     setSubmitting(false);
   };
@@ -81,12 +82,12 @@ export default function Step7Lead({ result, areaLabel, regimeLabel }: Props) {
             <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 2.1.55 4.15 1.6 5.96L2 22l4.27-1.12a9.93 9.93 0 0 0 5.76 1.83h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2zm5.79 14.16c-.24.68-1.39 1.3-1.95 1.39-.5.08-1.14.11-1.84-.12-.42-.13-.97-.31-1.66-.61-2.93-1.27-4.85-4.21-4.99-4.4-.15-.19-1.2-1.59-1.2-3.03 0-1.44.76-2.15 1.03-2.44.27-.29.59-.36.78-.36.2 0 .39.01.56.01.18.01.42-.07.66.5.24.58.83 2.01.9 2.16.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.3.36-.43.49-.14.13-.29.28-.13.55.17.27.74 1.22 1.59 1.97 1.09.97 2.01 1.27 2.29 1.41.27.13.43.11.59-.07.16-.18.69-.8.87-1.07.18-.27.36-.22.61-.13.25.09 1.58.74 1.85.88.27.13.45.2.51.31.07.12.07.66-.17 1.33z" />
           </svg>
         </div>
-        <h2 className="heading-display">Receba seu resultado pelo WhatsApp.</h2>
+        <h2 className="heading-display">Receba sua análise personalizada.</h2>
       </div>
 
       <p className="text-muted-soft">
-        Preencha os dados abaixo para finalizar e receber seu relatório
-        personalizado.
+        Preencha os dados abaixo para gerar seu relatório de economia e receber
+        pelo WhatsApp.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -134,7 +135,7 @@ export default function Step7Lead({ result, areaLabel, regimeLabel }: Props) {
           disabled={!allValid || submitting}
           className="cta-primary w-full mt-2"
         >
-          {submitting ? "Enviando..." : "Receber agora"}
+          {submitting ? "Gerando análise..." : "Gerar minha análise"}
         </button>
       </form>
 

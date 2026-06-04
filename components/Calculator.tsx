@@ -11,7 +11,9 @@ import Step4Faturamento from "./steps/Step4Faturamento";
 import Step5Regime from "./steps/Step5Regime";
 import Step6Procedimentos from "./steps/Step6Procedimentos";
 import Step7Lead from "./steps/Step7Lead";
+import Step8Result from "./steps/Step8Result";
 import { calcular, type Area, type Regime } from "@/lib/calc";
+import type { LeadData } from "@/lib/whatsapp";
 
 const AREA_LABELS: Record<Area, string> = {
   medico: "Médico",
@@ -33,6 +35,7 @@ export default function Calculator() {
   const [faturamento, setFaturamento] = useState(0);
   const [regime, setRegime] = useState<Regime | null>(null);
   const [procedimentos, setProcedimentos] = useState<boolean | null>(null);
+  const [submittedLead, setSubmittedLead] = useState<LeadData | null>(null);
 
   const next = useCallback(() => setStep((s) => Math.min(TOTAL, s + 1)), []);
   const back = useCallback(() => setStep((s) => Math.max(1, s - 1)), []);
@@ -46,19 +49,27 @@ export default function Calculator() {
     });
   }, [faturamento, regime, procedimentos, area]);
 
+  const showResult = submittedLead !== null;
+
   return (
     <main className="flex-1 flex flex-col">
       <section className="bg-hero">
         <div className="max-w-2xl w-full mx-auto px-6 pt-8 pb-12">
-          <div className="flex items-center gap-3 mb-6">
-            {step > 1 ? <BackButton onClick={back} /> : <div className="h-9 w-9" />}
-            <div className="flex-1">
-              <ProgressBar step={step} total={TOTAL} />
+          {!showResult && (
+            <div className="flex items-center gap-3 mb-6">
+              {step > 1 ? (
+                <BackButton onClick={back} />
+              ) : (
+                <div className="h-9 w-9" />
+              )}
+              <div className="flex-1">
+                <ProgressBar step={step} total={TOTAL} />
+              </div>
             </div>
-          </div>
+          )}
 
-          {step === 1 && <Step1Hero onNext={next} />}
-          {step === 2 && (
+          {!showResult && step === 1 && <Step1Hero onNext={next} />}
+          {!showResult && step === 2 && (
             <Step2Area
               value={area}
               onChange={(v) => {
@@ -67,34 +78,39 @@ export default function Calculator() {
               }}
             />
           )}
-          {step === 3 && <Step3About onNext={next} />}
-          {step === 4 && (
+          {!showResult && step === 3 && <Step3About onNext={next} />}
+          {!showResult && step === 4 && (
             <Step4Faturamento
               value={faturamento}
               onChange={setFaturamento}
               onNext={next}
             />
           )}
-          {step === 5 && (
+          {!showResult && step === 5 && (
             <Step5Regime
               value={regime}
               onChange={setRegime}
               onNext={next}
             />
           )}
-          {step === 6 && (
+          {!showResult && step === 6 && (
             <Step6Procedimentos
               value={procedimentos}
               onChange={setProcedimentos}
               onNext={next}
             />
           )}
-          {step === 7 && (
+          {!showResult && step === 7 && (
             <Step7Lead
               result={result}
               areaLabel={area ? AREA_LABELS[area] : ""}
               regimeLabel={regime ? REGIME_LABELS[regime] : ""}
+              onSubmitted={setSubmittedLead}
             />
+          )}
+
+          {showResult && submittedLead && (
+            <Step8Result lead={submittedLead} result={result} />
           )}
         </div>
       </section>

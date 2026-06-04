@@ -11,36 +11,53 @@ export interface LeadData {
   regime: string;
 }
 
-export function buildWhatsAppMessage(
-  lead: LeadData,
+/**
+ * Gera a URL pública (relativa) da imagem PNG personalizada com os dados do lead.
+ * Em produção fica em https://<seu-domínio>/api/result-image?...
+ */
+export function buildImageURL(
+  origin: string,
+  lead: Pick<LeadData, "nome">,
   result: CalcResult
 ): string {
+  const params = new URLSearchParams({
+    nome: lead.nome,
+    em: String(Math.round(result.economiaMensal)),
+    ea: String(Math.round(result.economiaAnual)),
+    r: String(Math.round(result.reducaoPercentual)),
+    f: String(Math.round(result.faturamentoMensal)),
+  });
+  return `${origin}/api/result-image?${params.toString()}`;
+}
+
+export function buildWhatsAppMessage(
+  lead: LeadData,
+  result: CalcResult,
+  imageURL?: string
+): string {
+  const primeiroNome = lead.nome.trim().split(/\s+/)[0];
+
   const linhas: string[] = [
-    `Olá Q&M Consultoria! Acabei de simular minha economia tributária.`,
-    ``,
-    `*Meus dados:*`,
-    `Nome: ${lead.nome}`,
-    `E-mail: ${lead.email}`,
-    `WhatsApp: ${lead.whatsapp}`,
-    `Área: ${lead.area}`,
-    `Regime atual: ${lead.regime}`,
-    `Faturamento mensal: ${formatBRL(result.faturamentoMensal)}`,
+    `Olá Q&M Consultoria! Sou ${primeiroNome}, acabei de simular minha economia tributária pela calculadora.`,
     ``,
   ];
 
   if (result.elegivel) {
     linhas.push(
-      `*Resultado da simulação:*`,
-      `Imposto atual estimado: ${formatBRL(result.impostoAtualMensal)}/mês`,
-      `Com Equiparação Hospitalar: ${formatBRL(
-        result.impostoComEquiparacaoMensal
-      )}/mês`,
-      `Economia mensal: ${formatBRL(result.economiaMensal)}`,
-      `Economia anual: ${formatBRL(result.economiaAnual)}`,
-      `Redução: ${result.reducaoPercentual.toFixed(1)}%`,
+      `Faturamento mensal: ${formatBRL(result.faturamentoMensal)}`,
+      `Regime atual: ${lead.regime}`,
+      `Área: ${lead.area}`,
       ``,
-      `Quero entender como aplicar isso no meu CNPJ.`
+      `*Economia estimada com Equiparação Hospitalar:*`,
+      `${formatBRL(result.economiaMensal)} / mês`,
+      `${formatBRL(result.economiaAnual)} / ano`,
+      `Redução: ${result.reducaoPercentual.toFixed(0)}%`,
+      ``
     );
+    if (imageURL) {
+      linhas.push(`Veja minha análise completa: ${imageURL}`, ``);
+    }
+    linhas.push(`Quero entender como aplicar isso no meu CNPJ.`);
   } else {
     linhas.push(
       `Gostaria de conversar sobre planejamento tributário para minha PJ da saúde.`
