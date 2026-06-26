@@ -39,6 +39,17 @@ export default function Calculator() {
 
   const next = useCallback(() => setStep((s) => Math.min(TOTAL, s + 1)), []);
   const back = useCallback(() => setStep((s) => Math.max(1, s - 1)), []);
+  const restart = useCallback(() => {
+    setSubmittedLead(null);
+    setArea(null);
+    setFaturamento(0);
+    setRegime(null);
+    setProcedimentos(null);
+    setStep(1);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
 
   const result = useMemo(() => {
     return calcular({
@@ -110,7 +121,11 @@ export default function Calculator() {
           )}
 
           {showResult && submittedLead && (
-            <Step8Result lead={submittedLead} result={result} />
+            <Step8Result
+              lead={submittedLead}
+              result={result}
+              onRestart={restart}
+            />
           )}
         </div>
       </section>

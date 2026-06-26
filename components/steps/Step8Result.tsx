@@ -11,9 +11,10 @@ import {
 interface Props {
   lead: LeadData;
   result: CalcResult;
+  onRestart: () => void;
 }
 
-export default function Step8Result({ lead, result }: Props) {
+export default function Step8Result({ lead, result, onRestart }: Props) {
   const { imageURL, whatsappURL } = useMemo(() => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
@@ -50,6 +51,15 @@ export default function Step8Result({ lead, result }: Props) {
   if (!result.elegivel) {
     return (
       <div className="space-y-6 text-center">
+        <div className="text-left">
+          <button
+            type="button"
+            onClick={onRestart}
+            className="inline-flex items-center gap-2 text-sm text-cream-100/80 hover:text-cream-100 transition-colors"
+          >
+            <span aria-hidden>←</span> Refazer cálculo
+          </button>
+        </div>
         <h2 className="heading-display">Recebemos sua simulação!</h2>
         <p className="text-muted-soft">
           Pelo perfil informado, o benefício de Equiparação Hospitalar pode não
@@ -65,6 +75,16 @@ export default function Step8Result({ lead, result }: Props) {
 
   return (
     <div className="space-y-6">
+      <div>
+        <button
+          type="button"
+          onClick={onRestart}
+          className="inline-flex items-center gap-2 text-sm text-cream-100/80 hover:text-cream-100 transition-colors"
+        >
+          <span aria-hidden>←</span> Refazer cálculo
+        </button>
+      </div>
+
       <header className="text-center space-y-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-medium uppercase tracking-wider">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
